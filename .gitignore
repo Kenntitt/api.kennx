@@ -1,0 +1,13 @@
+.cache 
+.tokoptero
+.local
+auth
+user
+.profile
+.bashrc
+.bash_profile
+.tokoptero-sshd.log
+.ssh_host_ed25519
+pnpm-workspace.yaml
+.gitconfig
+.git
