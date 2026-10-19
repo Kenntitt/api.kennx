@@ -5,9 +5,11 @@
   "dependencies": {
     "@napi-rs/canvas": "^0.1.52",
     "axios": "^1.7.2",
+    "axios-cookiejar-support": "^5.0.2",
     "cheerio": "^1.0.0-rc.12",
     "cors": "^2.8.5",
     "express": "^4.19.2",
-    "html-entities": "^2.5.2"
+    "html-entities": "^2.5.2",
+    "tough-cookie": "^4.1.4"
   }
 }
