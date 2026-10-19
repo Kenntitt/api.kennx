@@ -149,6 +149,10 @@
                 <div id="response-section" style="display: none;">
                     <div class="section-title">
                         <h4>&lt;/&gt; Response</h4>
+                        <!-- TOMBOL COPY RESPONSE UDAH DIBALIKIN -->
+                        <button class="btn-copy" id="btn-copy-res" onclick="copyResponse()">
+                            <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg> Copy
+                        </button>
                     </div>
                     <div class="code-block" id="response-body-text">
                         <div class="res-loader">⏳ Menunggu Request...</div>
@@ -206,6 +210,8 @@
         drawParticles();
 
         let allTools = [], currentCategory = 'Semua', activeTool = null;
+        let currentResponseText = ''; // Variabel buat nyimpen teks response biar bisa dicopy
+
         async function loadTools() {
             try {
                 const res = await fetch('/api/list'); const json = await res.json();
@@ -261,6 +267,8 @@
             } else { formSection.style.display = 'none'; }
             document.getElementById('response-section').style.display = 'none';
             document.getElementById('response-body-text').innerHTML = '';
+            document.getElementById('btn-copy-res').style.display = 'none'; // Sembunyiin tombol copy response saat modal baru dibuka
+            
             const btnRun = document.getElementById('btn-run');
             btnRun.disabled = false;
             btnRun.innerHTML = `<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg> Kirim Request`;
@@ -268,6 +276,7 @@
         }
         document.getElementById('btn-close').onclick = () => document.getElementById('modal').classList.remove('active');
         window.onclick = (e) => { if (e.target === document.getElementById('modal')) document.getElementById('modal').classList.remove('active'); };
+        
         function copyToClipboard(elementId) {
             const el = document.getElementById(elementId); const text = el.textContent;
             navigator.clipboard.writeText(text).then(() => {
@@ -275,6 +284,16 @@
                 btn.innerHTML = `✅ Copied!`; setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
             });
         }
+
+        // Fungsi khusus buat copy response JSON
+        function copyResponse() {
+            if(!currentResponseText) return;
+            navigator.clipboard.writeText(currentResponseText).then(() => {
+                const btn = document.getElementById('btn-copy-res'); const originalHtml = btn.innerHTML;
+                btn.innerHTML = `✅ Copied!`; setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
+            });
+        }
+
         function syntaxHighlight(json) {
             if (typeof json != 'string') json = JSON.stringify(json, undefined, 2);
             json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -292,11 +311,13 @@
             const btnRun = document.getElementById('btn-run');
             const responseSection = document.getElementById('response-section');
             const responseBody = document.getElementById('response-body-text');
+            const btnCopyRes = document.getElementById('btn-copy-res');
             
             btnRun.disabled = true;
             btnRun.innerHTML = `⏳ Loading...`;
             responseSection.style.display = 'block';
             responseBody.innerHTML = '<div class="res-loader">⏳ Requesting API...</div>';
+            btnCopyRes.style.display = 'none'; // Sembunyiin dulu pas loading
 
             try {
                 let url = activeTool.path;
@@ -321,6 +342,9 @@
                 try { resData = JSON.parse(textResponse); } 
                 catch (err) { throw new Error("Response bukan format JSON. Pastikan tidak menggunakan ?raw=true."); }
 
+                // Simpan teks JSON ke variabel global & munculin tombol copy
+                currentResponseText = JSON.stringify(resData, null, 2);
+                btnCopyRes.style.display = 'flex'; 
                 responseBody.innerHTML = syntaxHighlight(resData);
             } catch (error) {
                 responseBody.innerHTML = `<div class="res-error">❌ Error: ${error.message}</div>`;
@@ -331,5 +355,5 @@
         };
         loadTools();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4d03b9699ed87a5',t:'MTc5MjQxNzYyNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4d04a05b9cdc4b3',t:'MTc5MjQxODIxNw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
