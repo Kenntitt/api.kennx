@@ -15,7 +15,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 const apiList = [];
 const pluginsDir = path.join(__dirname, 'plugins');
 
-// AUTO-LOADER PLUGIN SYSTEM (ESM)
 async function loadPlugins() {
     try {
         const files = fs.readdirSync(pluginsDir);
@@ -40,19 +39,16 @@ async function loadPlugins() {
 
 await loadPlugins();
 
-// Endpoint untuk Frontend
 app.get('/api/list', (req, res) => {
     res.json({ creator: 'API KENNX', success: true, total: apiList.length, data: apiList });
 });
 
-// Fallback ke Frontend UI
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 export default app;
 
-// Localhost Listener
 if (process.env.NODE_ENV !== 'production') {
     app.listen(3000, () => console.log(`🔥 API KENNX running at http://localhost:3000`));
 }

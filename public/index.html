@@ -6,106 +6,70 @@
     <title>API KENNX - Public API Directory</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Fira+Code:wght@500&display=swap" rel="stylesheet">
     <style>
-        /* VARIABEL WARNA (LIGHT & DARK MODE) */
         :root {
-            --bg: #E0F2FE;
-            --dark: #1E293B;
-            --primary: #34D399;
-            --accent: #F472B6;
-            --yellow: #FDE047;
-            --white: #FFFFFF;
-            --shadow: 4px 4px 0px var(--dark);
-            --code-bg: #1E1B4B;
-            --text-main: #1E293B;
+            --bg: #E0F2FE; --dark: #1E293B; --primary: #34D399; --accent: #F472B6; --yellow: #FDE047; --white: #FFFFFF; --shadow: 4px 4px 0px var(--dark); --code-bg: #1E1B4B; --text-main: #1E293B;
         }
-
         [data-theme="dark"] {
-            --bg: #0F172A;
-            --dark: #F8FAFC;
-            --primary: #10B981;
-            --accent: #EC4899;
-            --yellow: #EAB308;
-            --white: #1E293B;
-            --shadow: 4px 4px 0px var(--dark);
-            --code-bg: #020617;
-            --text-main: #F8FAFC;
+            --bg: #0F172A; --dark: #F8FAFC; --primary: #10B981; --accent: #EC4899; --yellow: #EAB308; --white: #1E293B; --shadow: 4px 4px 0px var(--dark); --code-bg: #020617; --text-main: #F8FAFC;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Space Grotesk', sans-serif; background-color: var(--bg); color: var(--text-main); min-height: 100vh; transition: background-color 0.3s, color 0.3s; }
-
-        /* PARTIKEL BACKGROUND */
         #particles-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
-
         .brutal-box { border: 3px solid var(--dark); box-shadow: var(--shadow); border-radius: 12px; background-color: var(--white); transition: all 0.3s; }
-
-        /* HEADER */
+        
         header { background-color: var(--primary); border-bottom: 3px solid var(--dark); padding: 16px; position: sticky; top: 0; z-index: 10; transition: all 0.3s; }
         .header-inner { max-width: 900px; margin: 0 auto; background-color: var(--white); border: 3px solid var(--dark); border-radius: 50px; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 3px 3px 0px var(--dark); }
         .logo { font-weight: 700; font-size: 1.2rem; color: var(--text-main); }
-        
         .nav-actions { display: flex; gap: 12px; align-items: center; }
         .theme-toggle { background: var(--yellow); border: 2px solid var(--dark); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 2px 2px 0 var(--dark); color: var(--dark); }
         .theme-toggle:active { transform: translate(2px, 2px); box-shadow: none; }
-
-        /* MAIN */
+        
         main { max-width: 900px; margin: 30px auto; padding: 0 16px; }
         .hero h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 8px; }
         .hero p { font-size: 1.1rem; color: var(--text-main); opacity: 0.7; margin-bottom: 24px; font-weight: 500; }
-
         .search-container { position: relative; margin-bottom: 24px; }
         .search-container input { width: 100%; padding: 16px; border: 3px solid var(--dark); border-radius: 12px; box-shadow: var(--shadow); font-family: inherit; font-weight: 700; font-size: 1rem; outline: none; background: var(--white); color: var(--text-main); }
         .search-container input:focus { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px var(--dark); }
-
+        
         .tabs { display: flex; gap: 12px; overflow-x: auto; margin-bottom: 24px; padding-bottom: 8px; }
         .tab { padding: 8px 20px; border: 3px solid var(--dark); border-radius: 30px; font-weight: 700; background: var(--white); color: var(--text-main); cursor: pointer; white-space: nowrap; box-shadow: 3px 3px 0px var(--dark); transition: all 0.1s; }
         .tab.active { background: var(--accent); color: #fff; }
-
+        
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .card { padding: 20px; display: flex; flex-direction: column; gap: 12px; transition: transform 0.2s, box-shadow 0.2s; }
         .card:hover { transform: translateY(-4px); box-shadow: 6px 6px 0px var(--dark); }
-        
         .card-top { display: flex; justify-content: space-between; align-items: center; }
         .method { padding: 4px 10px; border-radius: 6px; border: 2px solid var(--dark); font-weight: 700; font-size: 0.8rem; color: #1E293B; }
         .method.GET { background: var(--primary); }
         .method.POST { background: var(--yellow); }
-        
         .category { font-size: 0.8rem; font-weight: 700; opacity: 0.6; }
         .card h3 { font-size: 1.3rem; }
         .path { font-family: 'Fira Code', monospace; font-size: 0.85rem; background: rgba(0,0,0,0.05); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--dark); word-break: break-all; }
         [data-theme="dark"] .path { background: rgba(255,255,255,0.1); }
         .card p { font-size: 0.95rem; opacity: 0.8; flex-grow: 1; line-height: 1.4; }
-        
         .btn-open { width: 100%; padding: 12px; border: 3px solid var(--dark); border-radius: 8px; background: var(--accent); color: #fff; font-weight: 700; font-size: 1rem; box-shadow: 3px 3px 0px var(--dark); cursor: pointer; transition: all 0.1s; margin-top: auto; }
         .btn-open:active { transform: translate(3px, 3px); box-shadow: none; }
 
-        /* MODAL REDESIGN */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; backdrop-filter: blur(4px); }
         .modal-overlay.active { display: flex; }
-        
         .modal-content { width: 100%; max-width: 550px; background: var(--bg); border: 3px solid var(--dark); box-shadow: 8px 8px 0px var(--dark); border-radius: 16px; overflow: hidden; animation: popIn 0.2s ease-out; max-height: 90vh; display: flex; flex-direction: column; }
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
         .modal-header { background: var(--yellow); padding: 16px 20px; border-bottom: 3px solid var(--dark); color: #1E293B; position: relative; }
         .modal-header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
         .method-path-modal { display: flex; flex-direction: column; gap: 8px; }
         .method-badge { background: var(--primary); border: 2px solid #1E293B; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; width: fit-content; color: #1E293B; }
         .path-title { font-family: 'Fira Code', monospace; font-size: 1.3rem; font-weight: 700; }
         .modal-desc { font-size: 0.95rem; font-weight: 500; opacity: 0.9; line-height: 1.4; margin-top: 4px; }
-
         .btn-close { background: var(--white); border: 3px solid #1E293B; border-radius: 50%; width: 36px; height: 36px; font-size: 1.2rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 2px 2px 0 #1E293B; color: #1E293B; }
         .btn-close:active { transform: translate(2px, 2px); box-shadow: none; }
-
-        .modal-body { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
         
+        .modal-body { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
         .section-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .section-title h4 { font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
-        
         .btn-copy { background: var(--white); border: 2px solid var(--dark); padding: 6px 12px; border-radius: 6px; font-weight: 700; font-family: inherit; font-size: 0.8rem; cursor: pointer; box-shadow: 2px 2px 0 var(--dark); color: var(--text-main); display: flex; align-items: center; gap: 6px; transition: all 0.1s; }
         .btn-copy:active { transform: translate(2px, 2px); box-shadow: none; }
         
         .code-block { background: var(--code-bg); color: #38BDF8; padding: 16px; border-radius: 12px; font-family: 'Fira Code', monospace; font-size: 0.85rem; overflow-x: auto; border: 2px solid var(--dark); white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; max-height: 250px; }
-        
         .form-group { margin-bottom: 8px; }
         .form-group label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 0.95rem; }
         .form-group input { width: 100%; padding: 12px; border: 3px solid var(--dark); border-radius: 8px; font-family: inherit; font-weight: 500; outline: none; background: var(--white); color: var(--text-main); }
@@ -124,20 +88,11 @@
         .code-block .string { color: #34D399; }
         .code-block .number { color: #FDE047; }
         .code-block .boolean { color: #FB923C; }
-
-        /* GAMBAR PREVIEW */
-        .img-preview-container { text-align: center; margin-top: 10px; }
-        .img-preview-container img { max-width: 100%; border-radius: 8px; border: 3px solid var(--dark); box-shadow: 4px 4px 0 var(--dark); margin-bottom: 16px; }
-        .btn-download-img { display: inline-block; text-decoration: none; background: var(--primary); color: #1E293B; padding: 10px 20px; border: 3px solid var(--dark); border-radius: 8px; font-weight: 700; box-shadow: 3px 3px 0 var(--dark); transition: all 0.1s; }
-        .btn-download-img:active { transform: translate(3px, 3px); box-shadow: none; }
-
         svg { width: 16px; height: 16px; fill: currentColor; }
     </style>
 </head>
 <body>
-
     <canvas id="particles-canvas"></canvas>
-
     <header>
         <div class="header-inner">
             <div class="logo">API KENNX ⚡</div>
@@ -152,24 +107,19 @@
             </div>
         </div>
     </header>
-
     <main>
         <div class="hero">
             <h1>API KENNX</h1>
-            <p>Kumpulan API publik. Silakan tes endpoint langsung dari sini.</p>
+            <p>Kumpulan API publik. Silakan tes endpoint langsung dari sini (JSON Response).</p>
         </div>
-
         <div class="search-container">
             <input type="text" id="search-input" placeholder="Cari API..." oninput="filterData()">
         </div>
-
         <div class="tabs" id="tabs-container"></div>
         <div class="grid" id="api-grid"></div>
     </main>
-
     <div class="modal-overlay" id="modal">
         <div class="modal-content">
-            
             <div class="modal-header">
                 <div class="modal-header-top">
                     <div class="method-path-modal">
@@ -180,7 +130,6 @@
                 </div>
                 <p class="modal-desc" id="modal-desc">Deskripsi API.</p>
             </div>
-
             <div class="modal-body">
                 <div>
                     <div class="section-title">
@@ -191,43 +140,33 @@
                     </div>
                     <div class="code-block" id="endpoint-url-text">https://...</div>
                 </div>
-
                 <div id="form-section" style="display: none;">
                     <div class="section-title"><h4>⚙️ Parameters</h4></div>
                     <form id="api-form">
                         <div id="form-inputs"></div>
                     </form>
                 </div>
-
                 <div id="response-section" style="display: none;">
                     <div class="section-title">
                         <h4>&lt;/&gt; Response</h4>
-                        <button class="btn-copy" id="btn-copy-res" onclick="copyResponse()">
-                            <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg> Copy
-                        </button>
                     </div>
                     <div class="code-block" id="response-body-text">
                         <div class="res-loader">⏳ Menunggu Request...</div>
                     </div>
                 </div>
             </div>
-
             <div class="modal-footer">
                 <button class="btn-execute" id="btn-run">
                     <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
                     Kirim Request
                 </button>
             </div>
-
         </div>
     </div>
-
     <script>
-        // 1. DARK/LIGHT MODE
         const themeBtn = document.getElementById('theme-btn');
         const iconSun = document.getElementById('icon-sun');
         const iconMoon = document.getElementById('icon-moon');
-        
         const currentTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', currentTheme);
         updateThemeIcon(currentTheme);
@@ -239,45 +178,25 @@
             localStorage.setItem('theme', newTheme);
             updateThemeIcon(newTheme);
         };
-
         function updateThemeIcon(theme) {
             if (theme === 'dark') { iconSun.style.display = 'none'; iconMoon.style.display = 'block'; } 
             else { iconSun.style.display = 'block'; iconMoon.style.display = 'none'; }
         }
 
-        // 2. PARTIKEL BACKGROUND
         const canvas = document.getElementById('particles-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
-        
         function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
+        window.addEventListener('resize', resizeCanvas); resizeCanvas();
         for (let i = 0; i < 30; i++) {
-            particles.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                size: Math.random() * 20 + 5,
-                speedX: Math.random() * 1 - 0.5,
-                speedY: Math.random() * 1 - 0.5,
-                rotation: Math.random() * Math.PI,
-                rotSpeed: Math.random() * 0.05 - 0.025
-            });
+            particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 20 + 5, speedX: Math.random() * 1 - 0.5, speedY: Math.random() * 1 - 0.5, rotation: Math.random() * Math.PI, rotSpeed: Math.random() * 0.05 - 0.025 });
         }
-
         function drawParticles() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(30, 41, 59, 0.05)';
-
             particles.forEach(p => {
-                ctx.save();
-                ctx.translate(p.x, p.y);
-                ctx.rotate(p.rotation);
-                ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
-                ctx.restore();
-
+                ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rotation); ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size); ctx.restore();
                 p.x += p.speedX; p.y += p.speedY; p.rotation += p.rotSpeed;
                 if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
                 if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
@@ -286,44 +205,29 @@
         }
         drawParticles();
 
-        // 3. FETCH DATA & UI
         let allTools = [], currentCategory = 'Semua', activeTool = null;
-        let currentResponseText = ''; // Simpan teks response buat di-copy
-
         async function loadTools() {
             try {
-                const res = await fetch('/api/list');
-                const json = await res.json();
-                allTools = json.data;
-                renderTabs();
-                filterData();
+                const res = await fetch('/api/list'); const json = await res.json();
+                allTools = json.data; renderTabs(); filterData();
             } catch (err) { alert('Gagal memuat daftar API.'); }
         }
-
         function renderTabs() {
             const categories = ['Semua', ...new Set(allTools.map(t => t.category))];
             document.getElementById('tabs-container').innerHTML = categories.map(cat => `
                 <div class="tab ${cat === currentCategory ? 'active' : ''}" onclick="setCategory('${cat}')">${cat}</div>
             `).join('');
         }
-
         function setCategory(cat) { currentCategory = cat; renderTabs(); filterData(); }
-
         function filterData() {
             const searchQuery = document.getElementById('search-input').value.toLowerCase();
             const grid = document.getElementById('api-grid');
-            
             const filtered = allTools.filter(tool => {
                 const matchCat = currentCategory === 'Semua' || tool.category === currentCategory;
                 const matchSearch = tool.name.toLowerCase().includes(searchQuery) || tool.path.toLowerCase().includes(searchQuery);
                 return matchCat && matchSearch;
             });
-
-            if (filtered.length === 0) {
-                grid.innerHTML = `<p style="grid-column: 1/-1; font-weight:700; text-align:center; padding: 20px;">API tidak ditemukan 🔍</p>`;
-                return;
-            }
-
+            if (filtered.length === 0) { grid.innerHTML = `<p style="grid-column: 1/-1; font-weight:700; text-align:center; padding: 20px;">API tidak ditemukan 🔍</p>`; return; }
             grid.innerHTML = filtered.map(tool => `
                 <div class="card brutal-box">
                     <div class="card-top">
@@ -337,17 +241,13 @@
                 </div>
             `).join('');
         }
-
         function openModal(id) {
             activeTool = allTools.find(t => t.id === id);
-            
             document.getElementById('modal-method').textContent = activeTool.method;
             document.getElementById('modal-method').className = `method-badge ${activeTool.method}`;
             document.getElementById('modal-path').textContent = activeTool.path;
             document.getElementById('modal-desc').textContent = activeTool.desc;
-
             document.getElementById('endpoint-url-text').textContent = `${window.location.origin}${activeTool.path}`;
-
             const formSection = document.getElementById('form-section');
             const inputsContainer = document.getElementById('form-inputs');
             if (activeTool.params.length > 0) {
@@ -358,46 +258,23 @@
                         <input type="text" id="param-${p.key}" placeholder="${p.placeholder}" required>
                     </div>
                 `).join('');
-            } else {
-                formSection.style.display = 'none';
-            }
-
+            } else { formSection.style.display = 'none'; }
             document.getElementById('response-section').style.display = 'none';
             document.getElementById('response-body-text').innerHTML = '';
-            document.getElementById('btn-copy-res').style.display = 'flex'; // Reset tombol copy
-            
             const btnRun = document.getElementById('btn-run');
             btnRun.disabled = false;
             btnRun.innerHTML = `<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg> Kirim Request`;
-
             document.getElementById('modal').classList.add('active');
         }
-
         document.getElementById('btn-close').onclick = () => document.getElementById('modal').classList.remove('active');
         window.onclick = (e) => { if (e.target === document.getElementById('modal')) document.getElementById('modal').classList.remove('active'); };
-
         function copyToClipboard(elementId) {
-            const el = document.getElementById(elementId);
-            const text = el.textContent;
-            
+            const el = document.getElementById(elementId); const text = el.textContent;
             navigator.clipboard.writeText(text).then(() => {
-                const btn = el.parentElement.querySelector('.btn-copy');
-                const originalHtml = btn.innerHTML;
-                btn.innerHTML = `✅ Copied!`;
-                setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
+                const btn = el.parentElement.querySelector('.btn-copy'); const originalHtml = btn.innerHTML;
+                btn.innerHTML = `✅ Copied!`; setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
             });
         }
-
-        function copyResponse() {
-            if(!currentResponseText) return;
-            navigator.clipboard.writeText(currentResponseText).then(() => {
-                const btn = document.getElementById('btn-copy-res');
-                const originalHtml = btn.innerHTML;
-                btn.innerHTML = `✅ Copied!`;
-                setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
-            });
-        }
-
         function syntaxHighlight(json) {
             if (typeof json != 'string') json = JSON.stringify(json, undefined, 2);
             json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -412,18 +289,14 @@
 
         document.getElementById('btn-run').onclick = async (e) => {
             e.preventDefault();
-            
             const btnRun = document.getElementById('btn-run');
             const responseSection = document.getElementById('response-section');
             const responseBody = document.getElementById('response-body-text');
-            const btnCopyRes = document.getElementById('btn-copy-res');
             
             btnRun.disabled = true;
             btnRun.innerHTML = `⏳ Loading...`;
             responseSection.style.display = 'block';
             responseBody.innerHTML = '<div class="res-loader">⏳ Requesting API...</div>';
-            
-            currentResponseText = '';
 
             try {
                 let url = activeTool.path;
@@ -438,41 +311,17 @@
                     });
                 }
 
-                // --- SMART ROUTING: Paksa raw=true untuk kategori Image ---
-                if (activeTool.category === 'Image') {
-                    queryParams.append('raw', 'true');
-                }
-
                 if (activeTool.method === 'GET' && queryParams.toString()) url += `?${queryParams.toString()}`;
                 if (activeTool.method === 'POST') options.headers['Content-Type'] = 'application/json';
 
                 const response = await fetch(url, options);
-                const contentType = response.headers.get('content-type');
+                const textResponse = await response.text();
+                
+                let resData;
+                try { resData = JSON.parse(textResponse); } 
+                catch (err) { throw new Error("Response bukan format JSON. Pastikan tidak menggunakan ?raw=true."); }
 
-                // --- SMART RENDERING: Gambar vs JSON ---
-                if (contentType && contentType.includes('image')) {
-                    // Kalau API balikin Gambar
-                    btnCopyRes.style.display = 'none'; // Sembunyiin tombol copy text
-                    
-                    const blob = await response.blob();
-                    const imgUrl = URL.createObjectURL(blob);
-                    
-                    responseBody.innerHTML = `
-                        <div class="img-preview-container">
-                            <img src="${imgUrl}" alt="API Output Image">
-                            <a href="${imgUrl}" download="api-kennx-output.png" class="btn-download-img">
-                                ⬇️ Download Gambar
-                            </a>
-                        </div>
-                    `;
-                } else {
-                    // Kalau API balikin JSON
-                    btnCopyRes.style.display = 'flex';
-                    const resData = await response.json();
-                    currentResponseText = JSON.stringify(resData, null, 2);
-                    responseBody.innerHTML = syntaxHighlight(resData);
-                }
-
+                responseBody.innerHTML = syntaxHighlight(resData);
             } catch (error) {
                 responseBody.innerHTML = `<div class="res-error">❌ Error: ${error.message}</div>`;
             } finally {
@@ -480,8 +329,7 @@
                 btnRun.innerHTML = `<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg> Kirim Lagi`;
             }
         };
-
         loadTools();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4cc3737ebc5c162',t:'MTc5MjM3NTUwNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4d03b9699ed87a5',t:'MTc5MjQxNzYyNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

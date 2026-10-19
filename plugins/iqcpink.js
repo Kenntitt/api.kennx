@@ -13,23 +13,16 @@ const ASSETS = {
     'https://raw.githubusercontent.com/sahibjotsaggu/San-Francisco-Pro-Fonts/master/',
   ],
   fonts: { regular: 'SF-Pro-Text-Regular.otf', semibold: 'SF-Pro-Text-Semibold.otf', bold: 'SF-Pro-Text-Bold.otf' },
-  fontFallback: 'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hiJ-Ek-_EeA.woff2',
+  fontFallback: 'https://github.com/google/fonts/raw/main/apache/roboto/static/Roboto-Regular.ttf',
   emoji: 'https://media.githubusercontent.com/media/Ditzzx-vibecoder/entahlah/main/emoji-apple.json',
   background: 'https://github.com/Napoleon-Fibonacci/assets/blob/main/image/mentahan.png',
 };
 
 const CONFIG = {
-  W: 590, H: 1280, fallbackFont: 'Helvetica, Arial, sans-serif',
-  status: { x: 80, y: 40 },
+  W: 590, H: 1280, fallbackFont: 'Helvetica, Arial, sans-serif', status: { x: 80, y: 40 },
   pill: { x: 22, y: 517, w: 461, h: 76, r: 38, cy: 555, size: 43, xs: [57, 116, 175, 234, 293, 352, 407], plus: { cx: 445, cy: 555, r: 24 } },
   bubble: { x: 18, y: 611, h: 62, r: 20, padX: 20, padR: 15, tsRight: 14, lineH: 29, fontSize: 22.3, tsSize: 15, tsColor: '#6b6b6b', maxTextW: 440, maxLines: 14, maxH: 489, imgMinW: 240, imgMaxW: 360 },
-  menu: { x: 22, y: 691, w: 342, h: 385, r: 40, iconCx: 71, labelX: 105, fontSize: 23, red: '#c10b27',
-    rows: [
-      { y: 732, label: 'Balas', icon: 'reply' }, { y: 787, label: 'Teruskan', icon: 'forward' },
-      { y: 842, label: 'Salin', icon: 'copy' }, { y: 898, label: 'Beri bintang', icon: 'star' },
-      { y: 954, label: 'Hapus', icon: 'trash', red: true }, { divider: 994, x1: 55, x2: 332 },
-      { y: 1035, label: 'Lainnya...', icon: 'more' },
-    ] },
+  menu: { x: 22, y: 691, w: 342, h: 385, r: 40, iconCx: 71, labelX: 105, fontSize: 23, red: '#c10b27', rows: [ { y: 732, label: 'Balas', icon: 'reply' }, { y: 787, label: 'Teruskan', icon: 'forward' }, { y: 842, label: 'Salin', icon: 'copy' }, { y: 898, label: 'Beri bintang', icon: 'star' }, { y: 954, label: 'Hapus', icon: 'trash', red: true }, { divider: 994, x1: 55, x2: 332 }, { y: 1035, label: 'Lainnya...', icon: 'more' } ] },
 };
 
 const WEIGHT = { regular: 0, semibold: 0.034, bold: 0.05 };
@@ -38,8 +31,7 @@ const warn = (...a) => console.warn('[warn]', ...a);
 const font = (size, weight = 'regular') => `${size}px ${FAMILY[weight] || 'InterRegular'}, ${CONFIG.fallbackFont}`;
 
 function drawText(ctx, text, x, y, size, weight = 'regular') {
-  ctx.font = font(size, weight);
-  ctx.fillText(text, x, y);
+  ctx.font = font(size, weight); ctx.fillText(text, x, y);
   const w = FAMILY[weight] ? 0 : WEIGHT[weight];
   if (w) { ctx.save(); ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = size * w; ctx.lineJoin = 'round'; ctx.strokeText(text, x, y); ctx.restore() }
 }
@@ -47,87 +39,59 @@ function drawText(ctx, text, x, y, size, weight = 'regular') {
 const rawUrl = u => u.replace(/^https?:\/\/github\.com\/([^/]+\/[^/]+)\/blob\//, 'https://raw.githubusercontent.com/$1/');
 async function fetchBuf(url) {
   const res = await fetch(rawUrl(url), { headers: { 'User-Agent': 'Mozilla/5.0' }, redirect: 'follow', signal: AbortSignal.timeout(10000) });
-  if (!res.ok) throw new Error(`${res.status} ${url}`);
-  return Buffer.from(await res.arrayBuffer());
+  if (!res.ok) throw new Error(`${res.status} ${url}`); return Buffer.from(await res.arrayBuffer());
 }
 
 async function cached(url, file) {
-  const dest = join(ASSETS.dir, file);
-  if (existsSync(dest)) return dest;
-  await mkdir(dirname(dest), { recursive: true });
-  await writeFile(dest, await fetchBuf(url));
-  return dest;
+  const dest = join(ASSETS.dir, file); if (existsSync(dest)) return dest;
+  await mkdir(dirname(dest), { recursive: true }); await writeFile(dest, await fetchBuf(url)); return dest;
 }
 
 async function ensureFont() {
   for (const [weight, file] of Object.entries(ASSETS.fonts)) {
     const family = 'SF' + weight;
     for (const base of ASSETS.fontBases) {
-      try {
-        if (GlobalFonts.registerFromPath(await cached(base + file, 'fonts/' + file), family) !== false) { FAMILY[weight] = family; break }
-      } catch { continue }
+      try { if (GlobalFonts.registerFromPath(await cached(base + file, 'fonts/' + file), family) !== false) { FAMILY[weight] = family; break } } catch { continue }
     }
   }
   if (Object.keys(ASSETS.fonts).every(w => FAMILY[w])) return;
-  try { GlobalFonts.registerFromPath(await cached(ASSETS.fontFallback, 'fonts/Inter-Regular.ttf'), 'InterRegular') }
-  catch (e) { warn('font gagal diambil, pakai font sistem: ' + e.message) }
+  try { GlobalFonts.registerFromPath(await cached(ASSETS.fontFallback, 'fonts/Inter-Regular.ttf'), 'InterRegular') } catch (e) { warn('font gagal: ' + e.message) }
 }
 
-let emojiMap = null;
-const emojiCache = new Map();
-
+let emojiMap = null; const emojiCache = new Map();
 async function loadEmojiMap() {
   if (emojiMap) return emojiMap;
-  try { emojiMap = JSON.parse(await readFile(await cached(ASSETS.emoji, 'emoji-apple.json'), 'utf-8')) }
-  catch (e) { warn('emoji json gagal diambil, emoji pakai font sistem: ' + e.message); emojiMap = {} }
+  try { emojiMap = JSON.parse(await readFile(await cached(ASSETS.emoji, 'emoji-apple.json'), 'utf-8')) } catch (e) { warn('emoji gagal: ' + e.message); emojiMap = {} }
   return emojiMap;
 }
-
 const emojiToUnicode = e => [...e].map(c => c.codePointAt(0).toString(16).padStart(4, '0')).join('-');
-
 async function getEmojiImage(emoji) {
   if (emojiCache.has(emoji)) return emojiCache.get(emoji);
-  const map = await loadEmojiMap();
-  const base = emojiToUnicode(emoji);
-  const noFe = base.replace(/-fe0f/gi, '');
+  const map = await loadEmojiMap(); const base = emojiToUnicode(emoji); const noFe = base.replace(/-fe0f/gi, '');
   const key = [base, noFe, `${noFe}-fe0f`, base.toUpperCase(), noFe.toUpperCase(), noFe.toUpperCase() + '-FE0F'].find(v => map[v]);
-  let img = null;
-  if (key) { try { img = await loadImage(Buffer.from(map[key], 'base64')) } catch { img = null } }
-  emojiCache.set(emoji, img);
-  return img;
+  let img = null; if (key) { try { img = await loadImage(Buffer.from(map[key], 'base64')) } catch { img = null } }
+  emojiCache.set(emoji, img); return img;
 }
-
 async function drawAppleEmoji(ctx, emoji, cx, cy, size) {
   const img = await getEmojiImage(emoji);
-  if (!img) {
-    ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `${size * 0.85}px sans-serif`;
-    ctx.fillText(emoji, cx, cy); ctx.restore(); return;
-  }
+  if (!img) { ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `${size * 0.85}px sans-serif`; ctx.fillText(emoji, cx, cy); ctx.restore(); return; }
   ctx.drawImage(img, cx - size / 2, cy - size / 2, size, size);
 }
 
 const SEGMENTER = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
 const EMOJI_TEST = /\p{Extended_Pictographic}|[\u{1F1E6}-\u{1F1FF}]|\u20E3/u;
 const emojiAdv = fs => fs * 1.05;
-
 function toRuns(text) {
   const runs = [];
   for (const { segment } of SEGMENTER.segment(text)) {
-    const e = EMOJI_TEST.test(segment);
-    const last = runs[runs.length - 1];
-    if (!e && last && !last.e) last.t += segment;
-    else runs.push({ t: segment, e });
-  }
-  return runs;
+    const e = EMOJI_TEST.test(segment); const last = runs[runs.length - 1];
+    if (!e && last && !last.e) last.t += segment; else runs.push({ t: segment, e });
+  } return runs;
 }
-
 function measureRuns(ctx, text, fs, weight = 'regular') {
-  ctx.font = font(fs, weight);
-  let w = 0;
-  for (const r of toRuns(text)) w += r.e ? emojiAdv(fs) : ctx.measureText(r.t).width;
-  return w;
+  ctx.font = font(fs, weight); let w = 0;
+  for (const r of toRuns(text)) w += r.e ? emojiAdv(fs) : ctx.measureText(r.t).width; return w;
 }
-
 async function drawTextWithEmojis(ctx, text, x, y, fs, weight) {
   let cx = x;
   for (const r of toRuns(text)) {
@@ -135,7 +99,6 @@ async function drawTextWithEmojis(ctx, text, x, y, fs, weight) {
     else { drawText(ctx, r.t, cx, y, fs, weight); cx += ctx.measureText(r.t).width }
   }
 }
-
 function wrapText(ctx, text, maxW, fs, weight = 'regular') {
   const lines = [];
   for (const para of String(text).split('\n')) {
@@ -144,8 +107,7 @@ function wrapText(ctx, text, maxW, fs, weight = 'regular') {
       const test = cur ? cur + ' ' + word : word;
       if (!cur || measureRuns(ctx, test, fs, weight) <= maxW) { cur = test; continue }
       lines.push(cur); cur = word;
-    }
-    lines.push(cur);
+    } lines.push(cur);
   }
   const out = [];
   for (const l of lines) {
@@ -154,10 +116,8 @@ function wrapText(ctx, text, maxW, fs, weight = 'regular') {
     for (const { segment } of SEGMENTER.segment(l)) {
       if (chunk && measureRuns(ctx, chunk + segment, fs, weight) > maxW) { out.push(chunk); chunk = '' }
       chunk += segment;
-    }
-    out.push(chunk);
-  }
-  return out;
+    } out.push(chunk);
+  } return out;
 }
 
 function rrPath(ctx, x, y, w, h, r) {
@@ -172,42 +132,33 @@ function blurBlob(ctx, x, y, w, h, r, color, blur) {
   ctx.save(); ctx.shadowColor = color; ctx.shadowBlur = blur; ctx.shadowOffsetX = 5000;
   ctx.fillStyle = color; roundRect(ctx, x - 5000, y, w, h, r); ctx.fill(); ctx.restore();
 }
-
 function makeDefaultBackground() {
   const c = createCanvas(CONFIG.W, CONFIG.H), g = c.getContext('2d');
   const lg = g.createLinearGradient(0, 0, 0, CONFIG.H);
   lg.addColorStop(0, '#f6eef2'); lg.addColorStop(0.5, '#fbe4ee'); lg.addColorStop(1, '#fddbe9');
   g.fillStyle = lg; g.fillRect(0, 0, CONFIG.W, CONFIG.H);
-  blurBlob(g, 0, 330, 350, 150, 40, 'rgba(255,255,255,0.9)', 50);
-  blurBlob(g, 175, 205, 385, 115, 30, '#e0689a', 44);
-  blurBlob(g, 410, 495, 180, 65, 28, '#e2789f', 40);
-  blurBlob(g, 395, 640, 185, 150, 40, '#dc6ea0', 44);
-  blurBlob(g, 405, 855, 170, 95, 34, '#e373a3', 40);
-  return c;
+  blurBlob(g, 0, 330, 350, 150, 40, 'rgba(255,255,255,0.9)', 50); blurBlob(g, 175, 205, 385, 115, 30, '#e0689a', 44);
+  blurBlob(g, 410, 495, 180, 65, 28, '#e2789f', 40); blurBlob(g, 395, 640, 185, 150, 40, '#dc6ea0', 44);
+  blurBlob(g, 405, 855, 170, 95, 34, '#e373a3', 40); return c;
 }
-
 async function loadBackground() {
   const src = ASSETS.background;
   try {
     if (/^https?:\/\//.test(src)) return await loadImage(await cached(src, 'mentahan.png'));
     const p = [resolve(__dirname, src), resolve(process.cwd(), src)].find(existsSync);
     if (p) return await loadImage(p);
-  } catch (e) { warn('background gagal dibaca: ' + e.message) }
-  return makeDefaultBackground();
+  } catch (e) { warn('background gagal: ' + e.message) } return makeDefaultBackground();
 }
-
 function drawBg(ctx) {
   const s = Math.max(CONFIG.W / bgImg.width, CONFIG.H / bgImg.height);
-  const dw = bgImg.width * s, dh = bgImg.height * s;
-  ctx.drawImage(bgImg, (CONFIG.W - dw) / 2, (CONFIG.H - dh) / 2, dw, dh);
+  const dw = bgImg.width * s, dh = bgImg.height * s; ctx.drawImage(bgImg, (CONFIG.W - dw) / 2, (CONFIG.H - dh) / 2, dw, dh);
 }
-
 async function loadInputImage(src) {
   if (!src) return null;
   try {
     if (/^https?:\/\//.test(src)) return await loadImage(await fetchBuf(src));
     return await loadImage(await readFile(resolve(process.cwd(), src)));
-  } catch (e) { warn('gambar gagal dibaca, pakai teks saja: ' + e.message); return null }
+  } catch (e) { warn('gambar gagal: ' + e.message); return null }
 }
 
 function drawWifi(ctx, cx, cy) {
@@ -215,22 +166,14 @@ function drawWifi(ctx, cx, cy) {
   for (const r of [6, 11, 16]) { ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI * 1.25, Math.PI * 1.75); ctx.stroke() }
   ctx.beginPath(); ctx.arc(cx, cy, 2.2, 0, Math.PI * 2); ctx.fill(); ctx.restore();
 }
-
 function drawBattery(ctx, INPUT) {
-  const lvl = Math.max(0, Math.min(100, Number(INPUT.battery) || 0));
-  const x = 497.4, y = 31, w = 37, h = 17;
-  ctx.save();
-  ctx.fillStyle = 'rgba(0,0,0,0.035)'; roundRect(ctx, x, y, w, h, 5.5); ctx.fill();
+  const lvl = Math.max(0, Math.min(100, Number(INPUT.battery) || 0)); const x = 497.4, y = 31, w = 37, h = 17;
+  ctx.save(); ctx.fillStyle = 'rgba(0,0,0,0.035)'; roundRect(ctx, x, y, w, h, 5.5); ctx.fill();
   ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1.5; roundRect(ctx, x, y, w, h, 5.5); ctx.stroke();
   const fw = 32.6 * lvl / 100;
-  if (fw > 0.5) {
-    ctx.fillStyle = INPUT.charging ? '#34c759' : lvl <= 20 ? '#ff3b30' : '#000';
-    roundRect(ctx, 499.6, 33.2, fw, 13.1, Math.min(4.6, fw / 2)); ctx.fill();
-  }
-  ctx.fillStyle = 'rgba(0,0,0,0.45)'; roundRect(ctx, 536.6, 36.5, 2, 6, 1); ctx.fill();
-  ctx.restore();
+  if (fw > 0.5) { ctx.fillStyle = INPUT.charging ? '#34c759' : lvl <= 20 ? '#ff3b30' : '#000'; roundRect(ctx, 499.6, 33.2, fw, 13.1, Math.min(4.6, fw / 2)); ctx.fill() }
+  ctx.fillStyle = 'rgba(0,0,0,0.45)'; roundRect(ctx, 536.6, 36.5, 2, 6, 1); ctx.fill(); ctx.restore();
 }
-
 function drawStatusBar(ctx, INPUT) {
   const s = CONFIG.status, bars = Math.max(0, Math.min(4, Number(INPUT.signal) || 0));
   ctx.save(); ctx.fillStyle = '#000'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
@@ -238,13 +181,11 @@ function drawStatusBar(ctx, INPUT) {
   ;[[419.6, 6.6], [427.9, 9.8], [436.2, 14], [444.5, 18]].forEach(([bx, bh], i) => {
     ctx.fillStyle = i < bars ? '#000' : 'rgba(0,0,0,0.3)'; roundRect(ctx, bx, 48.4 - bh, 4.8, bh, 1.3); ctx.fill();
   })
-  ctx.fillStyle = '#000';
-  const net = String(INPUT.network || '');
+  ctx.fillStyle = '#000'; const net = String(INPUT.network || '');
   if (net.toLowerCase() === 'wifi') drawWifi(ctx, 472, 48);
   else if (net) { ctx.textBaseline = 'alphabetic'; drawText(ctx, net, 458.3, 47.6, 19, 'bold') }
   ctx.restore(); drawBattery(ctx, INPUT);
 }
-
 async function drawEmojiBar(ctx, INPUT) {
   const p = CONFIG.pill;
   ctx.save(); ctx.shadowColor = 'rgba(225,120,165,0.28)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 4;
@@ -261,11 +202,9 @@ async function drawEmojiBar(ctx, INPUT) {
   ctx.strokeStyle = '#7b7b80'; ctx.lineWidth = 3.4; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.moveTo(cx - 11, cy); ctx.lineTo(cx + 11, cy); ctx.moveTo(cx, cy - 11); ctx.lineTo(cx, cy + 11); ctx.stroke(); ctx.restore();
 }
-
 function layoutBubble(ctx, img, INPUT) {
   const b = CONFIG.bubble; const ts = INPUT.bubbleTime || INPUT.time;
-  const text = String(INPUT.text || '').trim();
-  ctx.font = font(b.tsSize); const tsW = ctx.measureText(ts).width;
+  const text = String(INPUT.text || '').trim(); ctx.font = font(b.tsSize); const tsW = ctx.measureText(ts).width;
   let w, iw = 0, ih = 0, lines;
   if (img) {
     iw = Math.min(Math.max(img.width, b.imgMinW), b.imgMaxW); w = iw + 8;
@@ -275,15 +214,10 @@ function layoutBubble(ctx, img, INPUT) {
     w = Math.max(...lines.map(l => measureRuns(ctx, l, b.fontSize, 'bold')), tsW + 4) + b.padX + b.padR;
   }
   if (lines.length > b.maxLines) { lines = lines.slice(0, b.maxLines); lines[b.maxLines - 1] += '…' }
-  const capH = lines.length ? 6 + lines.length * b.lineH + 27 : 0;
-  let h = capH;
-  if (img) {
-    const room = CONFIG.bubble.y + CONFIG.bubble.h - 40 - capH - 8;
-    ih = Math.min(Math.round(iw * img.height / img.width), room); h = 4 + ih + (lines.length ? capH : 4);
-  }
+  const capH = lines.length ? 6 + lines.length * b.lineH + 27 : 0; let h = capH;
+  if (img) { const room = CONFIG.bubble.y + CONFIG.bubble.h - 40 - capH - 8; ih = Math.min(Math.round(iw * img.height / img.width), room); h = 4 + ih + (lines.length ? capH : 4); }
   return { img, lines, w, h, iw, ih, ts, tsW };
 }
-
 async function drawBubble(ctx, L, by) {
   const b = CONFIG.bubble;
   ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.08)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 2;
@@ -294,9 +228,7 @@ async function drawBubble(ctx, L, by) {
 
   let top = by;
   if (L.img) {
-    const { img, iw, ih } = L;
-    const sc = Math.max(iw / img.width, ih / img.height);
-    const sw = iw / sc, sh = ih / sc;
+    const { img, iw, ih } = L; const sc = Math.max(iw / img.width, ih / img.height); const sw = iw / sc, sh = ih / sc;
     ctx.save(); roundRect(ctx, b.x + 4, by + 4, iw, ih, 16); ctx.clip();
     ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, b.x + 4, by + 4, iw, ih);
     ctx.restore(); top = by + 4 + ih;
@@ -340,7 +272,6 @@ function drawIcon(ctx, name, cx, cy, color = '#000') {
   }
   ctx.restore();
 }
-
 function drawGlassPanel(ctx, m) {
   const rr = () => roundRect(ctx, m.x, m.y, m.w, m.h, m.r);
   ctx.save(); ctx.beginPath(); ctx.rect(0, 0, CONFIG.W, CONFIG.H); rrPath(ctx, m.x, m.y, m.w, m.h, m.r); ctx.clip('evenodd');
@@ -363,7 +294,6 @@ function drawGlassPanel(ctx, m) {
   rim.addColorStop(0, 'rgba(255,255,255,0.7)'); rim.addColorStop(1, 'rgba(255,255,255,0.22)');
   ctx.strokeStyle = rim; ctx.lineWidth = 1.2; roundRect(ctx, m.x + .6, m.y + .6, m.w - 1.2, m.h - 1.2, m.r); ctx.stroke(); ctx.restore();
 }
-
 function drawMenu(ctx) {
   const m = CONFIG.menu; drawGlassPanel(ctx, m);
   for (const row of m.rows) {
@@ -380,45 +310,23 @@ function drawMenu(ctx) {
 
 async function generateChatImage(params) {
   const INPUT = {
-    text: params.text || 'shui yun shen chu, yan zi gui lai 🌸',
-    image: params.image || '',
-    time: params.time || '13.45',
-    bubbleTime: params.bubbleTime || '',
-    network: params.network || '4G',
-    signal: params.signal || 4,
-    battery: params.battery || 50,
-    charging: params.charging === 'true',
-    reactions: params.reactions ? params.reactions.split(',') : ['👍', '❤️', '😂', '😮', '😢', '🙏', '🌺'],
+    text: params.text || 'shui yun shen chu, yan zi gui lai 🌸', image: params.image || '', time: params.time || '13.45',
+    bubbleTime: params.bubbleTime || '', network: params.network || '4G', signal: params.signal || 4, battery: params.battery || 50,
+    charging: params.charging === 'true', reactions: params.reactions ? params.reactions.split(',') : ['👍', '❤️', '😂', '😮', '😢', '🙏', '🌺'],
   };
-
-  await ensureFont();
-  await loadEmojiMap();
-  bgImg = await loadBackground();
-  let img = await loadInputImage(INPUT.image);
-  const canvas = createCanvas(CONFIG.W, CONFIG.H);
-  const ctx = canvas.getContext('2d');
-  
-  drawBg(ctx);
-  drawStatusBar(ctx, INPUT);
-  const gap = 10;
-  const L = layoutBubble(ctx, img, INPUT);
-  const by = CONFIG.bubble.y + CONFIG.bubble.h - L.h;
-  const pillTop = Math.min(CONFIG.pill.y, by - gap - CONFIG.pill.h);
+  await ensureFont(); await loadEmojiMap(); bgImg = await loadBackground(); let img = await loadInputImage(INPUT.image);
+  const canvas = createCanvas(CONFIG.W, CONFIG.H); const ctx = canvas.getContext('2d');
+  drawBg(ctx); drawStatusBar(ctx, INPUT); const gap = 10; const L = layoutBubble(ctx, img, INPUT);
+  const by = CONFIG.bubble.y + CONFIG.bubble.h - L.h; const pillTop = Math.min(CONFIG.pill.y, by - gap - CONFIG.pill.h);
   ctx.save(); ctx.translate(0, pillTop - CONFIG.pill.y); await drawEmojiBar(ctx, INPUT); ctx.restore();
-  await drawBubble(ctx, L, by);
-  drawMenu(ctx);
-  
+  await drawBubble(ctx, L, by); drawMenu(ctx);
   return canvas.toBuffer('image/png');
 }
 
 export default {
   meta: {
-    id: 'iphone-chat',
-    name: 'Fake iPhone Chat',
-    path: '/api/image/iphone-chat',
-    method: 'GET',
-    category: 'Image',
-    desc: 'Generate gambar fake iPhone Chat / Notifikasi (Support ?raw=true).',
+    id: 'iphone-chat', name: 'Fake iPhone Chat', path: '/api/image/iphone-chat', method: 'GET',
+    category: 'Image', desc: 'Generate gambar fake iPhone Chat (Support ?raw=true).',
     params: [
       { key: 'text', label: 'Teks Pesan', placeholder: 'Halo dunia!', type: 'text' },
       { key: 'image', label: 'URL Gambar (Opsional)', placeholder: 'https://...', type: 'text' },
@@ -429,25 +337,9 @@ export default {
   handler: async (req, res) => {
     try {
       const buffer = await generateChatImage(req.query);
-      
-      if (req.query.raw === 'true') {
-        res.setHeader('Content-Type', 'image/png');
-        return res.send(buffer);
-      }
-
-      const base64Image = buffer.toString('base64');
-      res.json({
-        creator: "API KENNX",
-        success: true,
-        data: {
-          format: 'png',
-          base64: `data:image/png;base64,${base64Image}`,
-          note: 'Tambahkan ?raw=true di URL untuk melihat gambar langsung.'
-        }
-      });
-      
+      if (req.query.raw === 'true') { res.setHeader('Content-Type', 'image/png'); return res.send(buffer); }
+      res.json({ creator: "API KENNX", success: true, data: { format: 'png', base64: `data:image/png;base64,${buffer.toString('base64')}`, note: 'Tambahkan ?raw=true di URL untuk melihat gambar langsung.' } });
     } catch (error) {
-      console.error(error);
       res.status(500).json({ creator: "API KENNX", success: false, error: error.message });
     }
   }
