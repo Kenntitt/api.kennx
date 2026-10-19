@@ -42,7 +42,7 @@ await loadPlugins();
 
 // Endpoint untuk Frontend
 app.get('/api/list', (req, res) => {
-    res.json({ success: true, creator: 'KENNX', total: apiList.length, data: apiList });
+    res.json({ creator: 'API KENNX', success: true, total: apiList.length, data: apiList });
 });
 
 // Fallback ke Frontend UI
