@@ -9,7 +9,7 @@ export default {
         path: '/api/download/tiktok',
         method: 'POST',
         category: 'Downloader',
-        desc: 'Ambil video TikTok tanpa watermark.',
+        desc: 'Ambil video/foto TikTok tanpa watermark (Auto-Fallback System).',
         params: [{ key: 'url', label: 'URL TikTok', placeholder: 'https://vt.tiktok.com/...' }]
     },
     handler: async (req, res) => {
@@ -20,15 +20,12 @@ export default {
 
         const started = Date.now();
 
-        // ==========================================
-        // METODE 1: Coba pakai API TikXedd (Free, No Key)
-        // ==========================================
         try {
             console.log(`[TikTok] Mencoba API Utama (TikXedd)...`);
             const { data } = await axios.get(`https://tikxedd.vercel.app/api/resolve`, {
                 params: { url: url },
                 headers: { 'User-Agent': UA },
-                timeout: 10000 // 10 detik timeout
+                timeout: 10000
             });
 
             if (data && data.download && data.download.noWatermark) {
@@ -37,10 +34,11 @@ export default {
                     success: true,
                     data: {
                         input: url,
+                        type: "video",
                         title: data.description || 'Tanpa Judul',
                         author: data.author || 'Unknown',
                         video: data.download.noWatermark,
-                        audio: null, // API ini fokus di video
+                        audio: null, 
                         thumbnail: null,
                         time_ms: Date.now() - started,
                         source: "TikXedd"
@@ -51,9 +49,6 @@ export default {
         } catch (error) {
             console.log(`[TikTok] API Utama gagal: ${error.message}. Beralih ke API Cadangan...`);
             
-            // ==========================================
-            // METODE 2: Fallback ke TikWM (Kalau API 1 Gagal)
-            // ==========================================
             try {
                 const { data } = await axios.get(`https://www.tikwm.com/api/`, {
                     params: { url: url },
@@ -61,30 +56,43 @@ export default {
                     timeout: 10000
                 });
 
-                if (data.code !== 0) throw new Error(data.msg || 'Gagal mengambil video');
+                if (data.code !== 0) throw new Error(data.msg || 'Gagal mengambil data');
 
                 const result = data.data;
                 const baseUrl = 'https://www.tikwm.com';
                 
-                const videoUrl = result.play.startsWith('http') ? result.play : `${baseUrl}${result.play}`;
-                const audioUrl = result.music.startsWith('http') ? result.music : `${baseUrl}${result.music}`;
+                const formatUrl = (path) => {
+                    if (!path) return null;
+                    return path.startsWith('http') ? path : `${baseUrl}${path}`;
+                };
+
+                let responseData = {
+                    input: url,
+                    title: result.title || 'Tanpa Judul',
+                    author: result.author?.unique_id || result.author?.nickname || 'Unknown',
+                    thumbnail: formatUrl(result.cover),
+                    audio: formatUrl(result.music),
+                    time_ms: Date.now() - started,
+                    source: "TikWM (Fallback)"
+                };
+
+                if (result.images && result.images.length > 0) {
+                    responseData.type = "photo";
+                    responseData.images = result.images.map(img => formatUrl(img));
+                    responseData.video = null;
+                } else {
+                    responseData.type = "video";
+                    responseData.video = formatUrl(result.play);
+                    responseData.images = null;
+                }
 
                 return res.json({
                     creator: "API KENNX",
                     success: true,
-                    data: {
-                        input: url,
-                        title: result.title || 'Tanpa Judul',
-                        author: result.author?.unique_id || result.author?.nickname || 'Unknown',
-                        video: videoUrl,
-                        audio: audioUrl,
-                        thumbnail: result.cover,
-                        time_ms: Date.now() - started,
-                        source: "TikWM (Fallback)"
-                    }
+                    data: responseData
                 });
+
             } catch (fallbackError) {
-                // Kalau dua-duanya gagal, baru kasih error
                 return res.status(500).json({ 
                     creator: "API KENNX", 
                     success: false, 
