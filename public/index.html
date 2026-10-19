@@ -125,6 +125,12 @@
         .code-block .number { color: #FDE047; }
         .code-block .boolean { color: #FB923C; }
 
+        /* GAMBAR PREVIEW */
+        .img-preview-container { text-align: center; margin-top: 10px; }
+        .img-preview-container img { max-width: 100%; border-radius: 8px; border: 3px solid var(--dark); box-shadow: 4px 4px 0 var(--dark); margin-bottom: 16px; }
+        .btn-download-img { display: inline-block; text-decoration: none; background: var(--primary); color: #1E293B; padding: 10px 20px; border: 3px solid var(--dark); border-radius: 8px; font-weight: 700; box-shadow: 3px 3px 0 var(--dark); transition: all 0.1s; }
+        .btn-download-img:active { transform: translate(3px, 3px); box-shadow: none; }
+
         svg { width: 16px; height: 16px; fill: currentColor; }
     </style>
 </head>
@@ -196,7 +202,7 @@
                 <div id="response-section" style="display: none;">
                     <div class="section-title">
                         <h4>&lt;/&gt; Response</h4>
-                        <button class="btn-copy" onclick="copyToClipboard('response-body-text', true)">
+                        <button class="btn-copy" id="btn-copy-res" onclick="copyResponse()">
                             <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg> Copy
                         </button>
                     </div>
@@ -282,6 +288,7 @@
 
         // 3. FETCH DATA & UI
         let allTools = [], currentCategory = 'Semua', activeTool = null;
+        let currentResponseText = ''; // Simpan teks response buat di-copy
 
         async function loadTools() {
             try {
@@ -357,6 +364,7 @@
 
             document.getElementById('response-section').style.display = 'none';
             document.getElementById('response-body-text').innerHTML = '';
+            document.getElementById('btn-copy-res').style.display = 'flex'; // Reset tombol copy
             
             const btnRun = document.getElementById('btn-run');
             btnRun.disabled = false;
@@ -368,12 +376,22 @@
         document.getElementById('btn-close').onclick = () => document.getElementById('modal').classList.remove('active');
         window.onclick = (e) => { if (e.target === document.getElementById('modal')) document.getElementById('modal').classList.remove('active'); };
 
-        function copyToClipboard(elementId, isHtml = false) {
+        function copyToClipboard(elementId) {
             const el = document.getElementById(elementId);
-            const text = isHtml ? el.innerText : el.textContent;
+            const text = el.textContent;
             
             navigator.clipboard.writeText(text).then(() => {
                 const btn = el.parentElement.querySelector('.btn-copy');
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = `✅ Copied!`;
+                setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
+            });
+        }
+
+        function copyResponse() {
+            if(!currentResponseText) return;
+            navigator.clipboard.writeText(currentResponseText).then(() => {
+                const btn = document.getElementById('btn-copy-res');
                 const originalHtml = btn.innerHTML;
                 btn.innerHTML = `✅ Copied!`;
                 setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
@@ -398,11 +416,14 @@
             const btnRun = document.getElementById('btn-run');
             const responseSection = document.getElementById('response-section');
             const responseBody = document.getElementById('response-body-text');
+            const btnCopyRes = document.getElementById('btn-copy-res');
             
             btnRun.disabled = true;
             btnRun.innerHTML = `⏳ Loading...`;
             responseSection.style.display = 'block';
             responseBody.innerHTML = '<div class="res-loader">⏳ Requesting API...</div>';
+            
+            currentResponseText = '';
 
             try {
                 let url = activeTool.path;
@@ -417,12 +438,40 @@
                     });
                 }
 
+                // --- SMART ROUTING: Paksa raw=true untuk kategori Image ---
+                if (activeTool.category === 'Image') {
+                    queryParams.append('raw', 'true');
+                }
+
                 if (activeTool.method === 'GET' && queryParams.toString()) url += `?${queryParams.toString()}`;
                 if (activeTool.method === 'POST') options.headers['Content-Type'] = 'application/json';
 
                 const response = await fetch(url, options);
-                const resData = await response.json();
-                responseBody.innerHTML = syntaxHighlight(resData);
+                const contentType = response.headers.get('content-type');
+
+                // --- SMART RENDERING: Gambar vs JSON ---
+                if (contentType && contentType.includes('image')) {
+                    // Kalau API balikin Gambar
+                    btnCopyRes.style.display = 'none'; // Sembunyiin tombol copy text
+                    
+                    const blob = await response.blob();
+                    const imgUrl = URL.createObjectURL(blob);
+                    
+                    responseBody.innerHTML = `
+                        <div class="img-preview-container">
+                            <img src="${imgUrl}" alt="API Output Image">
+                            <a href="${imgUrl}" download="api-kennx-output.png" class="btn-download-img">
+                                ⬇️ Download Gambar
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    // Kalau API balikin JSON
+                    btnCopyRes.style.display = 'flex';
+                    const resData = await response.json();
+                    currentResponseText = JSON.stringify(resData, null, 2);
+                    responseBody.innerHTML = syntaxHighlight(resData);
+                }
 
             } catch (error) {
                 responseBody.innerHTML = `<div class="res-error">❌ Error: ${error.message}</div>`;
@@ -434,5 +483,5 @@
 
         loadTools();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4cbd7f25b8cc4b3',t:'MTc5MjM3MTYwMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4cc3737ebc5c162',t:'MTc5MjM3NTUwNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
