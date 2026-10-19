@@ -1,59 +1,6 @@
-import axios from "axios";
+import axios from 'axios';
 
-const API = "https://api.twitterpicker.com/tiktok/mediav2";
-const UA = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36";
-
-function getTikTokId(url) {
-  const clean = url.trim();
-  const vt = clean.match(/vt\.tiktok\.com\/([^/?#]+)/i);
-  if (vt) return vt[1];
-
-  const t = clean.match(/tiktok\.com\/t\/([^/?#]+)/i);
-  if (t) return t[1];
-
-  const video = clean.match(/video\/(\d+)/i);
-  if (video) return video[1];
-
-  return clean;
-}
-
-function cleanMetadata(data = {}) {
-  return {
-    id: data.id || null,
-    username: data.user?.username || null,
-    name: data.user?.name || null,
-    avatar: data.user?.image || data.user?.image_small || null,
-    thumbnail: data.thumbnail || null,
-    thumbnail_animated: data.thumbnail_animated || null,
-    duration_seconds: data.video_duration_seconds || data.audio?.duration_seconds || null
-  };
-}
-
-function getMedia(data = {}) {
-  if (data.video_no_watermark?.url) {
-    return { type: "video", url: data.video_no_watermark.url };
-  }
-  if (Array.isArray(data.images) && data.images.length > 0) {
-    const first = data.images[0];
-    return { type: "photo", url: typeof first === "string" ? first : first?.url || null };
-  }
-  if (data.image?.url) return { type: "photo", url: data.image.url };
-  if (data.photo?.url) return { type: "photo", url: data.photo.url };
-  
-  return { type: null, url: null };
-}
-
-function makeResult(data = {}) {
-  const media = getMedia(data);
-  const audioUrl = data.audio?.url || null;
-  const result = { Type: media.type || null };
-
-  if (media.type === "video") result.Url_video = media.url;
-  if (media.type === "photo") result.Url_photo = media.url;
-  if (audioUrl) result.Url_audio = audioUrl;
-
-  return result;
-}
+const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
 export default {
     meta: {
@@ -62,7 +9,7 @@ export default {
         path: '/api/download/tiktok',
         method: 'POST',
         category: 'Downloader',
-        desc: 'Ambil video/foto TikTok tanpa watermark.',
+        desc: 'Ambil video TikTok tanpa watermark.',
         params: [{ key: 'url', label: 'URL TikTok', placeholder: 'https://vt.tiktok.com/...' }]
     },
     handler: async (req, res) => {
@@ -72,59 +19,79 @@ export default {
         }
 
         const started = Date.now();
-        const id = getTikTokId(url);
 
+        // ==========================================
+        // METODE 1: Coba pakai API TikXedd (Free, No Key)
+        // ==========================================
         try {
-            const response = await axios.get(API, {
-                timeout: 15000, // Dibatasi 15 detik biar aman di Vercel
-                validateStatus: () => true,
-                params: { id },
-                headers: {
-                    accept: "*/*",
-                    origin: "https://tiktokdownloader.com",
-                    referer: "https://tiktokdownloader.com/",
-                    "user-agent": UA,
-                    "sec-ch-ua": '"Google Chrome";v="147", "Not.A/Brand";v="8", "Chromium";v="147"',
-                    "sec-ch-ua-mobile": "?1",
-                    "sec-ch-ua-platform": '"Android"',
-                    "sec-fetch-site": "cross-site",
-                    "sec-fetch-mode": "cors",
-                    "sec-fetch-dest": "empty",
-                    "accept-language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7"
-                }
+            console.log(`[TikTok] Mencoba API Utama (TikXedd)...`);
+            const { data } = await axios.get(`https://tikxedd.vercel.app/api/resolve`, {
+                params: { url: url },
+                headers: { 'User-Agent': UA },
+                timeout: 10000 // 10 detik timeout
             });
 
-            if (response.status !== 200) {
-                throw new Error(`Gagal mengambil data. HTTP Status: ${response.status}`);
+            if (data && data.download && data.download.noWatermark) {
+                return res.json({
+                    creator: "API KENNX",
+                    success: true,
+                    data: {
+                        input: url,
+                        title: data.description || 'Tanpa Judul',
+                        author: data.author || 'Unknown',
+                        video: data.download.noWatermark,
+                        audio: null, // API ini fokus di video
+                        thumbnail: null,
+                        time_ms: Date.now() - started,
+                        source: "TikXedd"
+                    }
+                });
             }
-
-            const data = response.data || {};
-            const result = makeResult(data);
-            const isSuccess = !!(result.Url_video || result.Url_photo || result.Url_audio);
-
-            if (!isSuccess) {
-                throw new Error('Video/Foto tidak ditemukan. Pastikan link tidak private.');
-            }
-
-            // Format Response Standar API KENNX
-            res.json({
-                creator: "API KENNX",
-                success: true,
-                data: {
-                    input: url,
-                    metadata: cleanMetadata(data),
-                    result: result,
-                    time_ms: Date.now() - started
-                }
-            });
-
+            throw new Error("Struktur respons tidak valid");
         } catch (error) {
-            res.status(500).json({ 
-                creator: "API KENNX", 
-                success: false, 
-                error: error.message,
-                time_ms: Date.now() - started
-            });
+            console.log(`[TikTok] API Utama gagal: ${error.message}. Beralih ke API Cadangan...`);
+            
+            // ==========================================
+            // METODE 2: Fallback ke TikWM (Kalau API 1 Gagal)
+            // ==========================================
+            try {
+                const { data } = await axios.get(`https://www.tikwm.com/api/`, {
+                    params: { url: url },
+                    headers: { 'User-Agent': UA },
+                    timeout: 10000
+                });
+
+                if (data.code !== 0) throw new Error(data.msg || 'Gagal mengambil video');
+
+                const result = data.data;
+                const baseUrl = 'https://www.tikwm.com';
+                
+                const videoUrl = result.play.startsWith('http') ? result.play : `${baseUrl}${result.play}`;
+                const audioUrl = result.music.startsWith('http') ? result.music : `${baseUrl}${result.music}`;
+
+                return res.json({
+                    creator: "API KENNX",
+                    success: true,
+                    data: {
+                        input: url,
+                        title: result.title || 'Tanpa Judul',
+                        author: result.author?.unique_id || result.author?.nickname || 'Unknown',
+                        video: videoUrl,
+                        audio: audioUrl,
+                        thumbnail: result.cover,
+                        time_ms: Date.now() - started,
+                        source: "TikWM (Fallback)"
+                    }
+                });
+            } catch (fallbackError) {
+                // Kalau dua-duanya gagal, baru kasih error
+                return res.status(500).json({ 
+                    creator: "API KENNX", 
+                    success: false, 
+                    error: `Semua server downloader sedang sibuk. Error: ${fallbackError.message}`,
+                    time_ms: Date.now() - started
+                });
+            }
         }
     }
 };
